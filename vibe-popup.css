@@ -1,0 +1,65 @@
+/* vibe-popup.css — внешний вид попапа. Цвета и размеры задаются переменными, их можно переопределить */
+:root {
+  --vibe-popup-bg: #fff;
+  --vibe-popup-fg: #121212;
+  --vibe-popup-shade: rgb(26 28 33 / 0.5);
+  --vibe-popup-radius: 20px;
+  --vibe-popup-width: 800px;
+  --vibe-popup-wide-width: 1360px;
+  --vibe-popup-gap: 32px;
+  --vibe-popup-shadow: 0 24px 64px rgb(0 0 0 / 0.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --vibe-popup-bg: #141415; --vibe-popup-fg: #ededed; --vibe-popup-shade: rgb(0 0 0 / 0.6); }
+}
+.vibe-popup-lock { overflow: hidden; }
+.vibe-popup__shade { position: fixed; inset: 0; z-index: 1000; background: var(--vibe-popup-shade); backdrop-filter: blur(0.25rem); }
+/* Слой с окном прокручивается как страница: окно растёт с содержимым и уходит за нижний край */
+.vibe-popup__wrap { position: fixed; inset: 0; z-index: 1001; display: flex; justify-content: center; align-items: flex-start; overflow-y: auto; overscroll-behavior: contain; padding: var(--vibe-popup-gap) 24px 0; }
+.vibe-popup__panel { position: relative; display: flex; width: min(100%, var(--vibe-popup-width)); border-radius: var(--vibe-popup-radius); background: var(--vibe-popup-bg); color: var(--vibe-popup-fg); box-shadow: var(--vibe-popup-shadow); outline: none; margin-bottom: var(--vibe-popup-gap); }
+.vibe-popup--wide .vibe-popup__panel { width: min(100%, var(--vibe-popup-wide-width)); }
+.vibe-popup__body { flex: 1; min-width: 0; padding: 56px 48px; }
+/* Крестик едет вместе с прокруткой: закрыть можно с любого места */
+.vibe-popup__x { position: sticky; top: calc(16px - var(--vibe-popup-gap)); order: 2; flex: none; align-self: flex-start; margin: 16px 16px 0 -56px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 12px; background: rgb(127 127 127 / 0.1); color: inherit; cursor: pointer; }
+.vibe-popup__x:hover { background: rgb(127 127 127 / 0.18); }
+/* Стопка: нижний попап уменьшается и приподнимается, верхний открывается чуть ниже, чтобы край нижнего был виден */
+.vibe-popup__panel { transform-origin: 50% 0; transition: scale 220ms cubic-bezier(0.25, 1, 0.5, 1), translate 220ms cubic-bezier(0.25, 1, 0.5, 1), filter 220ms; }
+.vibe-popup--behind .vibe-popup__panel { scale: 0.97; translate: 0 -6px; filter: brightness(0.96); }
+.vibe-popup--behind .vibe-popup__x { visibility: hidden; }
+.vibe-popup--stacked .vibe-popup__shade { background: rgb(0 0 0 / 0.14); backdrop-filter: none; }
+.vibe-popup--stacked .vibe-popup__wrap { padding-top: calc(var(--vibe-popup-gap) + 8px); }
+/* Лёгкая анимация: окно чуть поднимается и проявляется, при закрытии быстро гаснет */
+.vibe-popup__shade { animation: popupFade 140ms cubic-bezier(0.33, 1, 0.68, 1); }
+.vibe-popup__panel { animation: popupIn 180ms cubic-bezier(0.25, 1, 0.5, 1); }
+.vibe-popup--out .vibe-popup__shade { animation: popupFadeOut 120ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+.vibe-popup--out .vibe-popup__panel { animation: popupOut 120ms cubic-bezier(0.33, 1, 0.68, 1) forwards; }
+/* Второй попап поверх первого поднимается снизу и быстро проявляется, при закрытии опускается и гаснет */
+/* Едет весь слой, а не окно: так у слоя не появляется лишняя полоса прокрутки во время движения */
+.vibe-popup--stacked .vibe-popup__panel, .vibe-popup--stacked.vibe-popup--out .vibe-popup__panel { animation: none; }
+.vibe-popup--stacked .vibe-popup__wrap { animation: popupUp 380ms cubic-bezier(0.22, 1, 0.36, 1); }
+.vibe-popup--stacked.vibe-popup--out .vibe-popup__wrap { animation: popupDown 200ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+/* Окно поднимается с четверти экрана ниже; прозрачность уходит в первой трети пути, чтобы недолго накладываться на нижний попап */
+@keyframes popupUp { from { translate: 0 25vh; opacity: 0; } 35% { opacity: 1; } }
+@keyframes popupDown { 60% { opacity: 1; } to { translate: 0 20vh; opacity: 0; } }
+@keyframes popupFade { from { opacity: 0; } }
+@keyframes popupIn { from { opacity: 0; translate: 0 8px; scale: .985; } }
+@keyframes popupFadeOut { to { opacity: 0; } }
+@keyframes popupOut { to { opacity: 0; translate: 0 6px; scale: .99; } }
+@media (prefers-reduced-motion: reduce) { .vibe-popup__shade, .vibe-popup__panel, .vibe-popup__wrap { animation: none !important; transition: none !important; } }
+/* Телефон: шторка снизу. Короткое окно стоит внизу по высоте содержимого, длинное начинается чуть ниже верха экрана и прокручивается вместе со слоем */
+@media (max-width: 760px) {
+  .vibe-popup__wrap { flex-direction: column; justify-content: flex-start; align-items: stretch; padding: 40px 0 0; }
+  /* margin-top: auto прижимает окно к низу, но не обрезает верх, когда окно выше экрана */
+  .vibe-popup__panel { width: 100%; margin: auto 0 0; border-radius: 20px 20px 0 0; }
+  .vibe-popup__body { padding: 52px 20px calc(32px + env(safe-area-inset-bottom)); }
+  .vibe-popup__x { top: 12px; margin: 12px 12px 0 -52px; }
+  /* Шторка выезжает снизу: двигается весь слой, окно не гаснет */
+  .vibe-popup__panel, .vibe-popup--out .vibe-popup__panel { animation: none; }
+  .vibe-popup__wrap { animation: sheetUp 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .vibe-popup--out .vibe-popup__wrap { animation: sheetDown 200ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+  .vibe-popup--stacked .vibe-popup__wrap { padding-top: 48px; animation: sheetUp 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .vibe-popup--stacked.vibe-popup--out .vibe-popup__wrap { animation: sheetDown 200ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+  .vibe-popup--behind .vibe-popup__panel { translate: 0 -16px; }
+}
+@keyframes sheetUp { from { translate: 0 100%; } }
+@keyframes sheetDown { to { translate: 0 100%; } }
